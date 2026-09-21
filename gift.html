@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#170d12">
+<title>یک هدیه‌ی زنده</title>
+
+<!-- کتابخانه‌ها: سه فایل کنار همین صفحه (three.module.js ، mindar-image-three.prod.js ، CSS3DRenderer.js) -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "./three.module.js?v=3",
+    "mindar-image-three": "./mindar-image-three.prod.js?v=3",
+    "three/addons/renderers/CSS3DRenderer.js": "./CSS3DRenderer.js?v=3"
+  }
+}
+</script>
+
+<style>
+  :root{
+    --night:#170d12;
+    --plum:#2b1721;
+    --amber:#f0b95f;
+    --amber-soft:rgba(240,185,95,.22);
+    --paper:#f6ece6;
+    --muted:#c9b3ad;
+    --ratio:.75;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--night);color:var(--paper);
+    font-family:Vazirmatn,Tahoma,system-ui,sans-serif;overflow:hidden;-webkit-tap-highlight-color:transparent}
+
+  #ar{position:fixed;inset:0;overflow:hidden}
+
+  .hide{opacity:0;visibility:hidden;pointer-events:none}
+
+  .screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:18px;padding:32px 28px calc(32px + env(safe-area-inset-bottom));text-align:center;
+    background:radial-gradient(120% 80% at 50% 0%,var(--plum) 0%,var(--night) 70%);
+    transition:opacity .6s ease,visibility .6s}
+
+  /* ---- صفحه‌ی خوش‌آمد: یک قاب که نفس می‌کشه ---- */
+  .keepsake{width:min(46vw,190px);aspect-ratio:var(--ratio);position:relative;margin-bottom:10px}
+  .keepsake::before,.keepsake::after{content:"";position:absolute;inset:0;border:1.5px solid var(--amber);border-radius:6px}
+  .keepsake::after{inset:-12px;border-color:var(--amber-soft);animation:breathe 3.6s ease-in-out infinite}
+  .keepsake svg{position:absolute;inset:0;margin:auto;width:38%;height:auto;fill:var(--amber)}
+  @keyframes breathe{0%,100%{transform:scale(1);opacity:.35}50%{transform:scale(1.05);opacity:1}}
+
+  h1{margin:0;font-size:clamp(24px,7vw,32px);font-weight:800;line-height:1.5;letter-spacing:0}
+  #subtitle{margin:0;font-size:16px;line-height:1.9;color:var(--muted);max-width:30ch}
+  #subtitle:empty{display:none}
+
+  .btn{appearance:none;border:0;cursor:pointer;font:inherit;font-weight:700;font-size:17px;
+    padding:14px 46px;border-radius:999px;color:var(--night);background:var(--amber);
+    box-shadow:0 8px 28px rgba(240,185,95,.28);margin-top:10px}
+  .btn:active{transform:scale(.97)}
+  .btn:disabled{opacity:.55;cursor:wait;box-shadow:none}
+  .btn:focus-visible,#sound:focus-visible{outline:3px solid var(--paper);outline-offset:3px}
+  .fine{margin:6px 0 0;font-size:13px;color:var(--muted);line-height:1.8}
+
+  .ring{width:44px;height:44px;border-radius:50%;border:3px solid var(--amber-soft);border-top-color:var(--amber);animation:spin 1s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* ---- راهنمای اسکن: چهار گوشه و یک خط نور ---- */
+  #hud{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;
+    pointer-events:none;transition:opacity .5s ease}
+  #hud.found{opacity:0}
+  .frame{position:relative;width:min(74vw,calc(50vh * var(--ratio)));aspect-ratio:var(--ratio)}
+  .frame i{position:absolute;width:30px;height:30px;border:3px solid var(--amber)}
+  .frame i:nth-child(1){top:0;right:0;border-left:0;border-bottom:0;border-top-right-radius:10px}
+  .frame i:nth-child(2){top:0;left:0;border-right:0;border-bottom:0;border-top-left-radius:10px}
+  .frame i:nth-child(3){bottom:0;right:0;border-left:0;border-top:0;border-bottom-right-radius:10px}
+  .frame i:nth-child(4){bottom:0;left:0;border-right:0;border-top:0;border-bottom-left-radius:10px}
+  .sweep{position:absolute;left:6%;right:6%;height:2px;top:8%;
+    background:linear-gradient(90deg,transparent,var(--amber),transparent);
+    box-shadow:0 0 14px var(--amber);animation:sweep 2.8s ease-in-out infinite}
+  @keyframes sweep{0%,100%{top:8%}50%{top:92%}}
+  .hint{margin:0;padding:10px 18px;border-radius:999px;font-size:14px;color:var(--paper);
+    background:rgba(23,13,18,.62);backdrop-filter:blur(6px)}
+
+  #sound{position:fixed;bottom:calc(22px + env(safe-area-inset-bottom));left:22px;width:48px;height:48px;border-radius:50%;
+    border:1.5px solid var(--amber-soft);background:rgba(23,13,18,.6);color:var(--paper);font-size:20px;cursor:pointer;
+    backdrop-filter:blur(6px);transition:opacity .4s}
+
+  @media (prefers-reduced-motion:reduce){
+    .keepsake::after,.sweep,.ring{animation:none}
+    .screen,#hud{transition:none}
+  }
+</style>
+</head>
+<body>
+
+<div id="ar"></div>
+
+<div id="hud" class="hide" aria-live="polite">
+  <div class="frame"><i></i><i></i><i></i><i></i><span class="sweep"></span></div>
+  <p class="hint">دوربین را روی عکس قاب بگیر و چند ثانیه ثابت نگه دار</p>
+</div>
+
+<button id="sound" class="hide" aria-label="قطع و وصل صدا">🔊</button>
+
+<main id="intro" class="screen">
+  <div class="keepsake" aria-hidden="true">
+    <svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.3 2.7 5 6 5c2 0 3.4 1.1 4.2 2.4h3.6C14.6 6.1 16 5 18 5c3.3 0 5.1 3.3 3.6 6.8C19.5 16.4 12 21 12 21z"/></svg>
+  </div>
+  <h1 id="title">این عکس یک راز دارد</h1>
+  <p id="subtitle"></p>
+  <button id="start" class="btn">شروع</button>
+  <p class="fine">اینترنت و دسترسی به دوربین لازم است.<br>صدای گوشی را باز کن.</p>
+</main>
+
+<div id="loading" class="screen hide" role="status">
+  <div class="ring"></div>
+  <p>در حال آماده‌سازی…</p>
+</div>
+
+<div id="error" class="screen hide" role="alert">
+  <h1>باز نشد</h1>
+  <p id="errmsg"></p>
+  <p id="errdetail" class="fine" dir="ltr" style="max-width:34ch;word-break:break-word"></p>
+  <button class="btn" onclick="location.reload()">دوباره تلاش کن</button>
+</div>
+
+<script>
+(async () => {
+  const $ = s => document.querySelector(s);
+  const show = el => el.classList.remove('hide');
+  const hide = el => el.classList.add('hide');
+
+  function fail(msg, err) {
+    hide($('#loading')); hide($('#intro')); hide($('#hud'));
+    $('#errmsg').textContent = msg;
+    $('#errdetail').textContent = err ? String(err.message || err) : '';
+    show($('#error'));
+  }
+
+
+  // همه‌ی فایل‌هایی که کتابخانه به آن‌ها وابسته است (ماژول‌های کناری) را دنبال می‌کند و فایل‌های گم‌شده را برمی‌گرداند
+  async function findMissing(start) {
+    const seen = new Set(), missing = [], queue = start.slice();
+    while (queue.length) {
+      const f = queue.shift();
+      if (seen.has(f)) continue;
+      seen.add(f);
+      let r;
+      try { r = await fetch('./' + f, { cache: 'no-store' }); } catch (e) { missing.push(f); continue; }
+      if (!r.ok) { missing.push(f); continue; }
+      const t = await r.text();
+      for (const m of t.matchAll(/(?:from|import)\s*\(?\s*["']\.\/([^"']+\.js)["']/g)) queue.push(m[1]);
+    }
+    return missing;
+  }
+  
+  // اگر کتابخانه‌ها لود نشدند، وضعیت هر فایل را می‌خوانیم تا علت دقیق معلوم شود
+  async function diagnose() {
+    const out = [];
+    for (const n of ['mindar-image-three.prod.js', 'three.module.js', 'CSS3DRenderer.js']) {
+      try {
+        const r = await fetch('./' + n + '?v=3', { cache: 'no-store' });
+        const t = await r.text();
+        out.push(n + ' -> ' + r.status + ', ' + t.length + ' chars, starts ' + JSON.stringify(t.slice(0, 30)));
+      } catch (e) { out.push(n + ' -> fetch failed'); }
+    }
+    return out.join(' | ');
+  }
+
+  // تنظیمات پیش‌فرض؛ فایل config.json که از استودیو گرفتی این‌ها را جایگزین می‌کند
+  let cfg = { target: 'target.mind', video: 'video.mp4', aspect: 0.75, title: '', subtitle: '' };
+  try {
+    const r = await fetch('config.json', { cache: 'no-cache' });
+    if (r.ok) cfg = { ...cfg, ...(await r.json()) };
+  } catch (e) { /* از پیش‌فرض‌ها استفاده می‌شود */ }
+
+  if (cfg.title) $('#title').textContent = cfg.title;
+  $('#subtitle').textContent = cfg.subtitle || '';
+  document.documentElement.style.setProperty('--ratio', String(1 / cfg.aspect));
+
+  // کتابخانه‌ها در پس‌زمینه لود می‌شوند؛ تا آماده نشدند دکمه‌ی شروع غیرفعال است
+  const startBtn = $('#start');
+  startBtn.disabled = true; startBtn.textContent = 'در حال بارگذاری…';
+  let THREE, MindARThree;
+  try {
+    THREE = await import('three');
+    ({ MindARThree } = await import('mindar-image-three'));
+  } catch (err) {
+    console.error(err);
+    let miss = [];
+    try { miss = await findMissing(['mindar-image-three.prod.js', 'three.module.js', 'CSS3DRenderer.js']); } catch (e) {}
+    if (miss.length) {
+      fail('چند فایل برنامه هنوز آپلود نشده. آن‌ها را کنار gift.html بگذار.', new Error('missing: ' + miss.join(', ')));
+      return;
+    }
+    let info = '';
+    try { info = ' || ' + await diagnose(); } catch (e) {}
+    fail('برنامه لود نشد. اینترنت را بررسی کن و دوباره تلاش کن.', new Error(String(err.message || err) + info));
+    return;
+  }
+  startBtn.disabled = false; startBtn.textContent = 'شروع';
+
+  async function loadMeta(v) {
+    if (v.readyState >= 1) return;
+    await new Promise((ok, bad) => {
+      v.addEventListener('loadedmetadata', ok, { once: true });
+      v.addEventListener('error', () => bad(new Error('video-load-failed: ' + cfg.video)), { once: true });
+    });
+  }
+
+  startBtn.addEventListener('click', async () => {
+    hide($('#intro')); show($('#loading'));
+    try {
+      // ویدیو داخل همین کلیک "باز" می‌شود تا مرورگر بعداً اجازه‌ی پخش با صدا بدهد
+      const video = document.createElement('video');
+      video.src = cfg.video;
+      video.loop = true;
+      video.playsInline = true;
+      video.setAttribute('playsinline', '');
+      video.preload = 'auto';
+      video._live = false;
+      video.play().then(() => { if (!video._live) video.pause(); }).catch(() => {});
+
+      const mindar = new MindARThree({
+        container: $('#ar'),
+        imageTargetSrc: cfg.target,
+        uiLoading: 'no', uiScanning: 'no', uiError: 'no',
+        missTolerance: 8
+      });
+      const { renderer, scene, camera } = mindar;
+
+      await loadMeta(video);
+
+      // ویدیو را طوری برش می‌دهیم که دقیقاً اندازه‌ی عکس را پر کند
+      const tex = new THREE.VideoTexture(video);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      const pa = 1 / cfg.aspect, va = video.videoWidth / video.videoHeight;
+      if (va > pa) { tex.repeat.set(pa / va, 1); tex.offset.set((1 - pa / va) / 2, 0); }
+      else         { tex.repeat.set(1, va / pa); tex.offset.set(0, (1 - va / pa) / 2); }
+
+      const vm = new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0, toneMapped: false });
+      const fm = new THREE.MeshBasicMaterial({ color: 0xf0b95f, transparent: true, opacity: 0 });
+      const frame = new THREE.Mesh(new THREE.PlaneGeometry(1.035, cfg.aspect + 0.035), fm); // لبه‌ی باریک طلایی
+      const plane = new THREE.Mesh(new THREE.PlaneGeometry(1, cfg.aspect), vm);
+      plane.position.z = 0.002;
+
+      const anchor = mindar.addAnchor(0);
+      anchor.group.add(frame, plane);
+
+      let found = false, op = 0;
+      anchor.onTargetFound = () => {
+        found = true; op = 0; video._live = true;
+        video.play().catch(() => {});
+        $('#hud').classList.add('found');
+      };
+      anchor.onTargetLost = () => {
+        found = false; video._live = false;
+        video.pause();
+        $('#hud').classList.remove('found');
+      };
+
+      await mindar.start();
+
+      renderer.setAnimationLoop(() => {
+        op += ((found ? 1 : 0) - op) * 0.1;      // ظاهر شدن نرم
+        vm.opacity = fm.opacity = op;
+        renderer.render(scene, camera);
+      });
+
+      hide($('#loading')); show($('#hud')); show($('#sound'));
+
+      $('#sound').addEventListener('click', () => {
+        video.muted = !video.muted;
+        $('#sound').textContent = video.muted ? '🔇' : '🔊';
+      });
+    } catch (err) {
+      console.error(err);
+      const denied = err && (err.name === 'NotAllowedError' || /permission|denied/i.test(String(err.message)));
+      fail(denied
+        ? 'دسترسی به دوربین داده نشد. در تنظیمات مرورگر اجازه‌ی دوربین را فعال کن و دوباره تلاش کن.'
+        : 'فایل‌ها بارگذاری نشد. اینترنت را بررسی کن و دوباره تلاش کن.', err);
+    }
+  });
+})();
+</script>
+</body>
+</html>
